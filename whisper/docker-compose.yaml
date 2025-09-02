@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  whisper-watch:
+    build: ./app
+    container_name: whisper-watch
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    environment:
+      - MODEL_SIZE=base
+      - LANGUAGE=pl
+    restart: unless-stopped

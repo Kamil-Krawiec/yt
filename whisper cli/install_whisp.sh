@@ -28,15 +28,38 @@ def to_srt_timestamp(t: float) -> str:
     ms = int(round((t - int(t)) * 1000))
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
-def write_srt(segments, path: pathlib.Path):
+def chunk_srt_write(segments, path: pathlib.Path, max_words: int = 6):
+    """
+    Write SRT splitting each whisper segment into smaller chunks
+    of up to `max_words` words, distributing time proportionally.
+    """
     with path.open("w", encoding="utf-8") as f:
-        for i, seg in enumerate(segments, start=1):
-            f.write(f"{i}\n{to_srt_timestamp(seg.start)} --> {to_srt_timestamp(seg.end)}\n{seg.text.strip()}\n\n")
+        idx = 1
+        for seg in segments:
+            text = (seg.text or "").strip()
+            if not text:
+                continue
+            words = text.split()
+            duration = max(seg.end - seg.start, 0.001)
+            avg_time = duration / max(len(words), 1)
+
+            for i in range(0, len(words), max_words):
+                chunk = words[i:i + max_words]
+                if not chunk:
+                    continue
+                chunk_start = seg.start + i * avg_time
+                chunk_end = seg.start + (i + len(chunk)) * avg_time
+                f.write(f"{idx}\n")
+                f.write(f"{to_srt_timestamp(chunk_start)} --> {to_srt_timestamp(chunk_end)}\n")
+                f.write(" ".join(chunk) + "\n\n")
+                idx += 1
 
 def write_txt(segments, path: pathlib.Path):
     with path.open("w", encoding="utf-8") as f:
         for seg in segments:
-            f.write(seg.text.strip() + "\n")
+            text = (seg.text or "").strip()
+            if text:
+                f.write(text + "\n")
 
 def transcribe_file(
     audio_path: pathlib.Path,
@@ -63,15 +86,16 @@ def transcribe_file(
         task=task,                # "transcribe" or "translate"
         beam_size=beam_size,
     )
+    segs = list(segments)
     print(f"[info] detected_language={info.language} (p={info.language_probability:.2f}) "
           f"| duration={getattr(info, 'duration', 'n/a')}")
     print(f"[info] elapsed={time.time() - t0:.1f}s")
-    return list(segments), info
+    return segs, info
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="whisp",
-        description="CPU-friendly faster-whisper CLI: transcribe natively and optionally also translate to English."
+        description="CPU-friendly faster-whisper CLI: native transcription and optional English translation."
     )
     p.add_argument("audio", nargs="?", help="Path to audio/video (wav/mp3/m4a/mp4…)")
     p.add_argument("-m", "--model", default="medium",
@@ -85,6 +109,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Limit BLAS threads; 0=auto (default: 0)")
     p.add_argument("-o", "--outdir", default="./out",
                    help="Output directory (default: ./out)")
+    p.add_argument("--words-per-line", type=int, default=6,
+                   help="Max words per subtitle line (default: 6)")
 
     # flags
     p.add_argument("--translate", action="store_true",
@@ -97,16 +123,17 @@ def print_info(p: argparse.ArgumentParser):
     print("whisp – faster-whisper CLI")
     print("\nCustomizable flags (with defaults):")
     for a in p._actions:
-        if not a.option_strings:  # positional
+        if not a.option_strings:
             continue
         opts = ", ".join(a.option_strings)
         default = a.default if a.default is not None else "None"
         print(f"  {opts:25s} default={default}  help={a.help or ''}")
     print("\nExamples:")
+    print("  whisp --info")
     print("  whisp input.m4a")
     print("  whisp --translate input.m4a")
     print("  whisp -m small --threads 6 input.wav")
-    print("  whisp --lang pl -o ~/transcripts call.mp3")
+    print("  whisp --lang pl --words-per-line 5 -o ~/transcripts call.mp3")
     print("")
 
 def main(argv=None):
@@ -140,7 +167,7 @@ def main(argv=None):
     )
     native_srt = outdir / f"{stem}.srt"
     native_txt = outdir / f"{stem}.txt"
-    write_srt(native_segments, native_srt)
+    chunk_srt_write(native_segments, native_srt, max_words=args.words_per_line)
     write_txt(native_segments, native_txt)
     print(f"[ok] native transcripts: {native_srt} | {native_txt}")
 
@@ -157,7 +184,7 @@ def main(argv=None):
         )
         en_srt = outdir / f"{stem}_en.srt"
         en_txt = outdir / f"{stem}_en.txt"
-        write_srt(en_segments, en_srt)
+        chunk_srt_write(en_segments, en_srt, max_words=args.words_per_line)
         write_txt(en_segments, en_txt)
         print(f"[ok] English translation: {en_srt} | {en_txt}")
 

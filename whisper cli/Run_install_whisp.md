@@ -108,6 +108,29 @@ whisp --translate -m medium -o ~/path/to/output/folder ~path/to/input/file/test_
 Results will be in `~/path/to/output/file`.
 
 ---
+```bash
+kamil@server:~/homelab$ whisp --info
+whisp – faster-whisper CLI
+
+Customizable flags (with defaults):
+  -h, --help                default===SUPPRESS==  help=show this help message and exit
+  -m, --model               default=medium        help=Model: tiny/base/small/medium/large-v2/large-v3 (default: medium)
+  --compute-type            default=int8          help=int8 | int8_float16 | float16 | float32 (default: int8 for CPU)
+  --beam                    default=1             help=Beam size (default: 1)
+  --lang                    default=None          help=Force source language (e.g., 'pl', 'en'). Omit for auto-detect.
+  --threads                 default=0             help=Limit BLAS threads; 0=auto (default: 0)
+  -o, --outdir              default=./out         help=Output directory (default: ./out)
+  --words-per-line          default=6             help=Max words per subtitle line (default: 6)
+  --translate               default=False         help=Also produce English translation (SRT+TXT) in addition to native transcript.
+  --info                    default=False         help=Print all customizable flags with defaults and exit.
+
+Examples:
+  whisp --info
+  whisp input.m4a
+  whisp --translate input.m4a
+  whisp -m small --threads 6 input.wav
+  whisp --lang pl --words-per-line 5 -o ~/transcripts call.mp3
+```
 
 ## ⚠️ Notes
 - First run will download the Whisper model (cached under `~/.cache`).

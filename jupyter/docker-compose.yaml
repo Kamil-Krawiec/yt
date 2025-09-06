@@ -5,6 +5,9 @@ services:
     container_name: jupyterlab
     ports:
       - "8888:8888"
+    environment:
+      - JUPYTER_TOKEN=mojSuperToken123   # MODIFY
+      - JUPYTER_ENABLE_LAB=yes #default yes so its optional
     volumes:
       - ./notebooks:/home/jovyan/work
     restart: unless-stopped

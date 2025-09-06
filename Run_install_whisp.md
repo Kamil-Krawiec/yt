@@ -102,7 +102,7 @@ scp "./plik_.mov" user@server_ip:~/path/to/file/test.mov
 
 Run transcription + translation on server:
 ```bash
-whisp --translate -m medium -o ~/path/to/output/file ~path/to/input/file/test_odcinek7.mov'
+whisp --translate -m medium -o ~/path/to/output/folder ~path/to/input/file/test_odcinek7.mov'
 ```
 
 Results will be in `~/path/to/output/file`.

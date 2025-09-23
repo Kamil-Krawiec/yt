@@ -597,7 +597,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--inplace",
         action="store_true",
-        help="Replace the input MP4 in-place once processing succeeds",
+        help="the processed video overwrites the original (atomic replace in the same folder). Without it, a new <name>_thumb.mp4 is created in the current directory. (default: false)",
     )
     args = parser.parse_args()
     if args.info:
@@ -627,18 +627,35 @@ def main() -> None:
     output = args.out or mp4.with_name(mp4.stem + "_thumb.mp4")
 
     if args.inplace:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir) / (mp4.stem + "_tmp.mp4")
-            append_thumbnail(
-                mp4,
-                png,
-                tmp_path,
-                duration=args.duration,
-                crf=args.crf,
-                audio_bitrate=args.audio_bitrate,
-            )
-            tmp_path.replace(mp4)
+    # Write a temporary file in the SAME directory as the input MP4
+    # so the final replace is atomic and not cross-filesystem.
+    with tempfile.NamedTemporaryFile(
+        prefix=f"{mp4.stem}_tmp_",
+        suffix=mp4.suffix,
+        dir=str(mp4.parent),
+        delete=False,
+    ) as tf:
+        tmp_path = Path(tf.name)
+
+    try:
+        append_thumbnail(
+            mp4,
+            png,
+            tmp_path,
+            duration=args.duration,
+            crf=args.crf,
+            audio_bitrate=args.audio_bitrate,
+        )
+        # Atomically replace the original file
+        tmp_path.replace(mp4)
         print(f"[tcap] Updated in place: {mp4}")
+    except Exception:
+        # Best-effort cleanup if something goes wrong
+        try:
+            tmp_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
     else:
         append_thumbnail(
             mp4,

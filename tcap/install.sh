@@ -355,7 +355,7 @@ if [ -n "$CLI_SOURCE_FILE" ]; then
   install -m 0755 "$CLI_SOURCE_FILE" "$ENTRYPOINT"
 else
   # Fallback: download from GitHub Raw (branch/tag overridable via REF)
-  REF="${REF:-tcap_testing}"
+  REF="${REF:-master}"
   CLI_SOURCE_URL="${TCAP_CLI_URL:-https://raw.githubusercontent.com/Kamil-Krawiec/yt/${REF}/tcap/tcap.py}"
   log_info "Downloading CLI from $CLI_SOURCE_URL"
   if need_cmd curl; then

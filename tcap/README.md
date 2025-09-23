@@ -1,16 +1,16 @@
 # Installation with only one command!!
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Kamil-Krawiec/yt/tcap_testing/tcap/install_tcap.sh) --user
+bash <(curl -fsSL https://raw.githubusercontent.com/Kamil-Krawiec/yt/main/tcap/install.sh) --user
 ```
 
-it installes `tcap` package automatically in `--user` option (only for current user). More on installing options [here](https://github.com/Kamil-Krawiec/yt/blob/161f4b64650f051ce1eead65b2b02b3ff79dac9e/tcap/install_tcap.sh#L42)
+it installes `tcap` package automatically in `--user` option (only for current user). More on installing options [here](https://github.com/Kamil-Krawiec/yt/blob/main/tcap/install.sh)
 
 # tcap Installer
 
 `tcap` appends a still PNG to the end of an MP4 so you always land on the right
 thumbnail frame when scrubbing or uploading clips. This repository ships a
-single script—`install_tcap.sh`—that sets up the CLI, Python environment, and
+single script—`install.sh`—that sets up the CLI, Python environment, and
 FFmpeg dependencies for you.
 
 ## Requirements
@@ -26,14 +26,14 @@ If the packages are already installed, run the installer with
 
 ### User install (no sudo)
 ```bash
-./install_tcap.sh
+./install.sh
 ```
 Installs to `~/.local/share/tcap` and links the launcher to `~/.local/bin/tcap`.
 The installer ensures that directory is added to your `PATH` for future shells.
 
 ### System install (requires sudo)
 ```bash
-sudo ./install_tcap.sh --system
+sudo ./install.sh --system
 ```
 Installs to `/opt/tcap` with the launcher at `/usr/local/bin/tcap`.
 
@@ -43,7 +43,7 @@ Installs to `/opt/tcap` with the launcher at `/usr/local/bin/tcap`.
 - `--bin-dir DIR` — choose where the launcher script lives.
 - `--skip-packages` — disable automatic package installation and only verify binaries.
 
-Run `./install_tcap.sh --help` for the full list of options with descriptions.
+Run `./install.sh --help` for the full list of options with descriptions.
 
 ## Typical usage
 Once installed, the CLI is available as `tcap`:

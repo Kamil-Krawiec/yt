@@ -61,4 +61,9 @@ Additional tweaks:
   ```
   Replace the paths with the system locations if you installed with sudo.
 
+# Troubleshooting
+
+After installing i cant see the tcap package:
+- try refreshing your terminal with `exec bash -l` (or `exec zsh -l`).
+
 Enjoy faster thumbnail selection!

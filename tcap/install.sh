@@ -332,7 +332,7 @@ if [ -n "$CLI_SOURCE_FILE" ]; then
   log_info "Copying CLI from $CLI_SOURCE_FILE"
   install -m 0755 "$CLI_SOURCE_FILE" "$ENTRYPOINT"
 else
-  CLI_SOURCE_URL="${TCAP_CLI_URL:-https://raw.githubusercontent.com/Kamil-Krawiec/yt/main/tcap/tcap.py}"
+  CLI_SOURCE_URL="${TCAP_CLI_URL:-https://raw.githubusercontent.com/Kamil-Krawiec/yt/refs/heads/tcap_testing/tcap/tcap.py}"
   log_info "Downloading CLI from $CLI_SOURCE_URL"
   if need_cmd curl; then
     curl -fsSL "$CLI_SOURCE_URL" -o "$ENTRYPOINT"

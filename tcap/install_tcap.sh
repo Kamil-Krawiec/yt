@@ -3,6 +3,12 @@
 # Run this script to set up the CLI plus dependencies automatically.
 
 set -euo pipefail
+
+if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+  export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+  unset PYTHONPATH PYTHONHOME PYTHONUSERBASE \
+        LD_PRELOAD LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+fi
 IFS=$'\n\t'
 umask 022
 
@@ -247,7 +253,7 @@ if [ "$INSTALL_MODE" = "system" ] && [ "${EUID:-$(id -u)}" -ne 0 ]; then
   if [ $SKIP_PACKAGE_INSTALL -eq 1 ]; then args+=("--skip-packages"); fi
   if [ -n "$PREFIX" ]; then args+=("--prefix" "$PREFIX"); fi
   if [ -n "$BIN_DIR" ]; then args+=("--bin-dir" "$BIN_DIR"); fi
-  exec sudo -E "$0" "${args[@]}"
+  exec sudo -- "$0" "${args[@]}"
 fi
 
 INSTALL_DIR="$PREFIX"

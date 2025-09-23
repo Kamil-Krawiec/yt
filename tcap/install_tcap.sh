@@ -627,35 +627,35 @@ def main() -> None:
     output = args.out or mp4.with_name(mp4.stem + "_thumb.mp4")
 
     if args.inplace:
-    # Write a temporary file in the SAME directory as the input MP4
-    # so the final replace is atomic and not cross-filesystem.
-    with tempfile.NamedTemporaryFile(
-        prefix=f"{mp4.stem}_tmp_",
-        suffix=mp4.suffix,
-        dir=str(mp4.parent),
-        delete=False,
-    ) as tf:
-        tmp_path = Path(tf.name)
+      # Write a temporary file in the SAME directory as the input MP4
+      # so the final replace is atomic and not cross-filesystem.
+      with tempfile.NamedTemporaryFile(
+          prefix=f"{mp4.stem}_tmp_",
+          suffix=mp4.suffix,
+          dir=str(mp4.parent),
+          delete=False,
+      ) as tf:
+          tmp_path = Path(tf.name)
 
-    try:
-        append_thumbnail(
-            mp4,
-            png,
-            tmp_path,
-            duration=args.duration,
-            crf=args.crf,
-            audio_bitrate=args.audio_bitrate,
-        )
-        # Atomically replace the original file
-        tmp_path.replace(mp4)
-        print(f"[tcap] Updated in place: {mp4}")
-    except Exception:
-        # Best-effort cleanup if something goes wrong
-        try:
-            tmp_path.unlink()
-        except FileNotFoundError:
-            pass
-        raise
+      try:
+          append_thumbnail(
+              mp4,
+              png,
+              tmp_path,
+              duration=args.duration,
+              crf=args.crf,
+              audio_bitrate=args.audio_bitrate,
+          )
+          # Atomically replace the original file
+          tmp_path.replace(mp4)
+          print(f"[tcap] Updated in place: {mp4}")
+      except Exception:
+          # Best-effort cleanup if something goes wrong
+          try:
+              tmp_path.unlink()
+          except FileNotFoundError:
+              pass
+          raise
     else:
         append_thumbnail(
             mp4,

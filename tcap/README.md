@@ -1,7 +1,7 @@
 # Installation with only one command!!
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Kamil-Krawiec/yt/main/tcap/install.sh) --user
+bash <(curl -fsSL https://raw.githubusercontent.com/Kamil-Krawiec/yt/refs/heads/master/tcap/install.sh) --user
 ```
 
 it installes `tcap` package automatically in `--user` option (only for current user). More on installing options [here](https://github.com/Kamil-Krawiec/yt/blob/main/tcap/install.sh)

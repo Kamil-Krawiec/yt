@@ -316,47 +316,23 @@ fi
 log_info "Upgrading pip inside the virtual environment"
 "$PYTHON_BIN" -m pip install --upgrade pip >/dev/null
 
-# Ensure the target directory exists
-mkdir -p "$(dirname "$ENTRYPOINT")"
-
-log_info "Resolving CLI source for $ENTRYPOINT"
-
-# 1) Explicit override via env var (useful for dev/testing)
-if [ -n "${TCAP_CLI_FILE:-}" ] && [ -f "$TCAP_CLI_FILE" ]; then
-  CLI_SOURCE_FILE="$TCAP_CLI_FILE"
-else
-  CLI_SOURCE_FILE=""
-
-  # 2) Try next to this script (works when running install.sh from a checked-out repo)
-  if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
-    _bs_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P || true)"
-    if [ -n "$_bs_dir" ] && [ -f "$_bs_dir/tcap.py" ]; then
-      CLI_SOURCE_FILE="$_bs_dir/tcap.py"
-    fi
-  fi
-
-  # 3) Try current working directory (if user runs installer from repo root)
-  if [ -z "$CLI_SOURCE_FILE" ] && [ -f "./tcap.py" ]; then
-    CLI_SOURCE_FILE="$(pwd -P)/tcap.py"
-  fi
-
-  # 4) Try Git repo root (developer convenience)
-  if [ -z "$CLI_SOURCE_FILE" ] && need_cmd git; then
-    if _root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-      if [ -f "$_root/tcap/tcap.py" ]; then
-        CLI_SOURCE_FILE="$_root/tcap/tcap.py"
-      fi
+log_info "Writing CLI entry point to $ENTRYPOINT"
+CLI_SOURCE_FILE=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  if SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)"; then
+    if [ -f "$SCRIPT_DIR/tcap.py" ]; then
+      CLI_SOURCE_FILE="$SCRIPT_DIR/tcap.py"
     fi
   fi
 fi
-
+if [ -z "$CLI_SOURCE_FILE" ] && [ -f "tcap.py" ]; then
+  CLI_SOURCE_FILE="$(pwd)/tcap.py"
+fi
 if [ -n "$CLI_SOURCE_FILE" ]; then
   log_info "Copying CLI from $CLI_SOURCE_FILE"
   install -m 0755 "$CLI_SOURCE_FILE" "$ENTRYPOINT"
 else
-  # Fallback: download from GitHub Raw (branch/tag overridable via REF)
-  REF="${REF:-tcap_testing}"
-  CLI_SOURCE_URL="${TCAP_CLI_URL:-https://raw.githubusercontent.com/Kamil-Krawiec/yt/${REF}/tcap/tcap.py}"
+  CLI_SOURCE_URL="${TCAP_CLI_URL:-https://raw.githubusercontent.com/Kamil-Krawiec/yt/main/tcap/tcap.py}"
   log_info "Downloading CLI from $CLI_SOURCE_URL"
   if need_cmd curl; then
     curl -fsSL "$CLI_SOURCE_URL" -o "$ENTRYPOINT"
@@ -366,8 +342,9 @@ else
     log_error "Neither curl nor wget is available to download tcap.py"
     exit 1
   fi
-  chmod 0755 "$ENTRYPOINT"
+  chmod +x "$ENTRYPOINT"
 fi
+chmod +x "$ENTRYPOINT"
 
 log_info "Creating launcher at $LAUNCHER"
 cat > "$LAUNCHER" <<LAUNCHER

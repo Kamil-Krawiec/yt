@@ -22,6 +22,7 @@ Not using tailscale? No problem, see below **Optional: Not using Tailscale?**
  sudo apt update
  sudo apt install -y samba smbclient
 ```
+smbclient is used for testing so its not 100% critical to downloand.
 
 ### 2) Create the shared directory
 ```bash

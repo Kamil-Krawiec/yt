@@ -13,20 +13,20 @@ Not using tailscale? No problem, see below **Optional: Not using Tailscale?**
 
 ### REQUIRED: set your Linux user and share path, easier to reference furhter in the config.
 ```bash
-> USERNAME=${SUDO_USER:-$USER}
-> SHARE=/srv/tailshare
+ USERNAME=${SUDO_USER:-$USER}
+ SHARE=/srv/tailshare
 ```
 
 ### 1) Install packages
 ```bash
-> sudo apt update
-> sudo apt install -y samba smbclient
+ sudo apt update
+ sudo apt install -y samba smbclient
 ```
 
 ### 2) Create the shared directory
 ```bash
-> sudo mkdir -p "$SHARE"
-> sudo chown "$USERNAME:$USERNAME" "$SHARE"
+ sudo mkdir -p "$SHARE"
+ sudo chown "$USERNAME:$USERNAME" "$SHARE"
 ```
 
 ### 3) Minimal config (binds to Tailscale)
@@ -60,11 +60,11 @@ That makes smbd bind only to lo and tailscale0, so it won’t even listen on you
 
 ### 4) Start & enable Samba
 ```bash
-> sudo systemctl enable --now smbd
+ sudo systemctl enable --now smbd
 ```
 ### 5) Set a Samba password for your Linux user
 ```bash
-> sudo smbpasswd -a "$USERNAME"
+ sudo smbpasswd -a "$USERNAME"
 ```
 
 ---
@@ -73,20 +73,20 @@ That makes smbd bind only to lo and tailscale0, so it won’t even listen on you
 
 ### REQUIRED: set your Linux user and share path, easier to reference furhter in the config.
 ```bash
-> USERNAME=${SUDO_USER:-$USER}
-> SHARE=/srv/tailshare
+ USERNAME=${SUDO_USER:-$USER}
+ SHARE=/srv/tailshare
 ```
 
 ### 1) Install/restore Samba packages (after purge)
 ```bash
-> sudo apt update
-> sudo apt --reinstall install -y samba smbclient samba-common samba-common-bin
+ sudo apt update
+ sudo apt --reinstall install -y samba smbclient samba-common samba-common-bin
 ```
 
 ### 2) Create the shared directory
 ```bash
-> sudo mkdir -p "$SHARE"
-> sudo chown "$USERNAME:$USERNAME" "$SHARE"
+ sudo mkdir -p "$SHARE"
+ sudo chown "$USERNAME:$USERNAME" "$SHARE"
 ```
 ### 3) Minimal config (binds to Tailscale)
 Go to /etc/samba/smb.conf and open it in text editor (f.e nano), at the end of a file add this additional configuration
@@ -117,14 +117,14 @@ optional configuration for tailscale only:
 
 ### 4) Start & enable Samba (recreates secrets after purge)
 ```bash
-> sudo systemctl enable --now smbd
+ sudo systemctl enable --now smbd
 ```
 #### If the next step complains about secrets.tdb, run once:
 #### sudo install -d -m0700 -o root -g root /var/lib/samba/private && sudo systemctl restart smbd
 
 ### 5) Set a Samba password for your Linux user
 ```bash
-> sudo smbpasswd -a "$USERNAME"
+ sudo smbpasswd -a "$USERNAME"
 ```
 ---
 
@@ -137,9 +137,9 @@ testparm -s
 
 **Allow SMB on Tailscale, deny on default WAN interface**
 ```bash
-> sudo ufw allow in on tailscale0 to any port 445 proto tcp
-> WAN_IF=$(ip -o -4 route show to default | awk '{print $5; exit}')
-> [ -n "$WAN_IF" ] && sudo ufw deny in on "$WAN_IF" to any port 445 proto tcp
+ sudo ufw allow in on tailscale0 to any port 445 proto tcp
+ WAN_IF=$(ip -o -4 route show to default | awk '{print $5; exit}')
+ [ -n "$WAN_IF" ] && sudo ufw deny in on "$WAN_IF" to any port 445 proto tcp
 ```
 
 - Allow on tailscale0 – if UFW is enabled with “deny incoming” (the usual), this opens SMB only on the Tailscale interface, so clients can actually connect.
@@ -149,13 +149,13 @@ testparm -s
 
 **Replace 'tailscale0' with your LAN interface (e.g., eth0)**
 ```bash
-> sudo sed -i 's/tailscale0/eth0/g' /etc/samba/smb.conf
-> sudo systemctl restart smbd
+ sudo sed -i 's/tailscale0/eth0/g' /etc/samba/smb.conf
+ sudo systemctl restart smbd
 ```
 
 ---
 
 Connect from clients
-- macOS (Finder → Go → Connect to Server): smb://<SERVER_IP>/tailshare [For mac it should be this](https://support.apple.com/lt-lt/guide/mac-help/mchlp1140/mac)
-- Windows (Explorer → Map network drive): \\<SERVER_IP>\tailshare [Windows docs](https://support.microsoft.com/en-us/windows/file-sharing-over-a-network-in-windows-b58704b2-f53a-4b82-7bc1-80f9994725bf)
-- Login: your Linux username (smbpasswd -a above) — on Windows you can use WORKGROUP\<user>
+- macOS (Finder → Go → Connect to Server): smb://<SERVER_IP/tailshare [For mac it should be this](https://support.apple.com/lt-lt/guide/mac-help/mchlp1140/mac)
+- Windows (Explorer → Map network drive): \\<SERVER_IP\tailshare [Windows docs](https://support.microsoft.com/en-us/windows/file-sharing-over-a-network-in-windows-b58704b2-f53a-4b82-7bc1-80f9994725bf)
+- Login: your Linux username (smbpasswd -a above) — on Windows you can use WORKGROUP\<user

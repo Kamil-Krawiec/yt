@@ -43,6 +43,26 @@ def _h264_level_to_str(level_val) -> str | None:
             return f"{s}.0"
     return None
 
+
+def _fraction_to_float(value: str | None) -> float | None:
+    """Convert ffprobe fraction strings (e.g. '30000/1001') to floats."""
+    if not value or value in {"0/0", "N/A", "nan", "inf", "-inf"}:
+        return None
+    if "/" in value:
+        num, den = value.split("/", 1)
+        try:
+            num_f = float(num)
+            den_f = float(den)
+        except ValueError:
+            return None
+        if den_f == 0:
+            return None
+        return num_f / den_f
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
 _PROFILE_MAP = {
     "high": "high",
     "main": "main",
@@ -99,7 +119,7 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
             "-select_streams",
             "v:0",
             "-show_entries",
-            "stream=width,height,avg_frame_rate",
+            "stream=width,height,avg_frame_rate,r_frame_rate,nb_frames",
             "-of",
             "json",
             str(video_path),
@@ -112,13 +132,6 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
 
     width = int(stream["width"])
     height = int(stream["height"])
-    frame_rate = stream.get("avg_frame_rate", "30/1")
-    try:
-        num, den = frame_rate.split("/")
-        fps = float(num) / float(den) if float(den) != 0 else float(num)
-    except Exception:
-        fps = 30.0
-
     try:
         duration = float(
             run_text(
@@ -136,6 +149,31 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
         )
     except Exception:
         duration = 0.0
+
+    fps: float | None = None
+
+    nb_frames_raw = stream.get("nb_frames")
+    if duration > 0 and nb_frames_raw and nb_frames_raw not in {"N/A", "nan"}:
+        try:
+            nb_frames = float(nb_frames_raw)
+        except ValueError:
+            nb_frames = None
+        else:
+            if nb_frames and nb_frames > 0:
+                fps = nb_frames / duration
+
+    if fps is None or fps <= 0:
+        for key in ("r_frame_rate", "avg_frame_rate"):
+            candidate = _fraction_to_float(stream.get(key))
+            if candidate and candidate > 0:
+                fps = candidate
+                break
+
+    if fps is None or fps <= 0:
+        fps = 30.0
+
+    if duration and duration < 1.0 and fps < 1.0:
+        fps = 30.0
 
     has_audio = False
     try:

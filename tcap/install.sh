@@ -13,7 +13,7 @@ IFS=$'\n\t'
 umask 022
 
 APP="tcap"
-VERSION="1.0.2"
+VERSION="1.0.3"
 SCRIPT_NAME="$(basename "$0")"
 
 SYSTEM_PREFIX="/opt/$APP"

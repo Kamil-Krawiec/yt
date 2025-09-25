@@ -123,6 +123,86 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
 
     return VideoInfo(width, height, fps, duration, has_audio)
 
+def _encode_still_clip(
+    png_path: Path,
+    still_path: Path,
+    *,
+    width: int,
+    height: int,
+    fps: float,
+    v_pix_fmt: str,
+    v_profile: str | None,
+    v_level: str | None,
+    colorspace: dict[str, str],
+    has_audio: bool,
+    a_sample_rate: int | None,
+    a_channel_layout: str | None,
+    crf: int,
+    duration: float,
+    audio_bitrate: str,
+) -> None:
+    # Build video filter: scale/pad to exact WxH, keep aspect, set SAR, pixel format & colors
+    vf = [
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease",
+        "pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:color=black".format(w=width, h=height),
+        "setsar=1",
+        f"fps={fps:.6f}",
+        f"format={v_pix_fmt}",
+    ]
+    vf = ",".join(vf)
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-loop", "1", "-i", str(png_path),
+    ]
+
+    # Add a short silent audio only if the input had audio (to keep stream layout identical)
+    if has_audio:
+        sr = a_sample_rate or 48000
+        cl = a_channel_layout or "stereo"
+        cmd += ["-f", "lavfi", "-t", f"{duration}", "-i", f"anullsrc=channel_layout={cl}:sample_rate={sr}"]
+
+    cmd += [
+        "-t", f"{duration}",
+        "-vf", vf,
+        "-r", f"{fps:.6f}",
+        "-c:v", "libx264",
+        "-pix_fmt", v_pix_fmt,
+        "-preset", "veryslow",
+        "-tune", "stillimage",
+        "-crf", str(crf),
+    ]
+
+    # Match profile/level if known (helps concat copy)
+    if v_profile:
+        cmd += ["-profile:v", v_profile]
+    if v_level:
+        cmd += ["-level:v", v_level]
+
+    # Color tags (bt709, etc.) – improves matching
+    if colorspace.get("space"):
+        cmd += ["-colorspace", colorspace["space"]]
+    if colorspace.get("trc"):
+        cmd += ["-color_trc", colorspace["trc"]]
+    if colorspace.get("primaries"):
+        cmd += ["-color_primaries", colorspace["primaries"]]
+
+    if has_audio:
+        cmd += ["-c:a", "aac", "-b:a", audio_bitrate, "-shortest"]
+    else:
+        cmd += ["-an"]
+
+    cmd += ["-movflags", "+faststart", str(still_path)]
+    run_capture(cmd)
+
+
+def _concat_copy(input_mp4: Path, still_mp4: Path, out_path: Path) -> None:
+    # Concat demuxer requires a list file; -c copy avoids re-encoding
+    with tempfile.TemporaryDirectory() as td:
+        lst = Path(td) / "list.txt"
+        lst.write_text(f"file '{input_mp4.resolve()}'\nfile '{still_mp4.resolve()}'\n", encoding="utf-8")
+        cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(out_path)]
+        run_capture(cmd)
 
 def append_thumbnail(
     mp4_path: Path,
@@ -140,6 +220,59 @@ def append_thumbnail(
 
     info = ffprobe_props(mp4_path)
 
+    # Extra probe to decide if we can "copy-concat" (no re-encode of the main file)
+    vmeta = run_json([
+        "ffprobe","-v","error","-select_streams","v:0",
+        "-show_entries","stream=codec_name,pix_fmt,profile,level,color_space,color_transfer,color_primaries,sample_aspect_ratio",
+        "-of","json", str(mp4_path)
+    ])
+    ameta = run_json([
+        "ffprobe","-v","error","-select_streams","a:0",
+        "-show_entries","stream=codec_name,channel_layout,sample_rate",
+        "-of","json", str(mp4_path)
+    ])
+
+    vstream = (vmeta.get("streams") or [{}])[0]
+    astream = (ameta.get("streams") or [{}])[0] if info.has_audio else {}
+
+    vcodec = vstream.get("codec_name")
+    v_pix_fmt = vstream.get("pix_fmt", "yuv420p")
+    v_profile = vstream.get("profile")
+    # ffprobe gives numeric level; ffmpeg expects like "4.1" – pass as-is if present
+    v_level = str(vstream.get("level")) if vstream.get("level") is not None else None
+    colors = {
+        "space": vstream.get("color_space"),
+        "trc": vstream.get("color_transfer"),
+        "primaries": vstream.get("color_primaries"),
+    }
+
+    acodec = astream.get("codec_name")
+    a_sr = int(astream.get("sample_rate")) if astream.get("sample_rate") else None
+    a_cl = astream.get("channel_layout")
+
+    # We can try concat-copy if video is H.264 and (no audio or AAC audio)
+    can_concat_copy = (vcodec == "h264") and (not info.has_audio or acodec == "aac")
+
+    if can_concat_copy:
+        with tempfile.TemporaryDirectory() as td:
+            still_mp4 = Path(td) / "still.mp4"
+            # Encode ONLY the 0.3 s tail with matching parameters
+            _encode_still_clip(
+                png_path, still_mp4,
+                width=info.width, height=info.height, fps=info.fps,
+                v_pix_fmt=v_pix_fmt, v_profile=v_profile, v_level=v_level,
+                colorspace=colors,
+                has_audio=info.has_audio, a_sample_rate=a_sr, a_channel_layout=a_cl,
+                crf=crf, duration=duration, audio_bitrate=audio_bitrate,
+            )
+            try:
+                _concat_copy(mp4_path, still_mp4, out_path)
+                return  # success, no re-encode of main video/audio
+            except CommandError:
+                # fall back to full re-encode path below
+                pass
+
+    # Fallback: original filter_complex path (re-encodes the whole file)
     still_chain = (
         f"[1:v]scale={info.width}:{info.height},fps={info.fps:.6f},"
         f"format=yuv420p,setsar=1,trim=duration={duration},setpts=PTS-STARTPTS[v1]"
@@ -155,51 +288,18 @@ def append_thumbnail(
 
     a1_chain = f"anullsrc=r=48000:cl=stereo,atrim=duration={duration},asetpts=PTS-STARTPTS[a1]"
     v0_chain = "[0:v]setpts=PTS-STARTPTS[v0]"
-    filter_graph = ";".join(
-        [
-            v0_chain,
-            a0_chain,
-            still_chain,
-            a1_chain,
-            "[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]",
-        ]
-    )
+    filter_graph = ";".join([v0_chain, a0_chain, still_chain, a1_chain, "[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]"])
 
     cmd = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        str(mp4_path),
-        "-loop",
-        "1",
-        "-t",
-        f"{duration}",
-        "-i",
-        str(png_path),
-        "-filter_complex",
-        filter_graph,
-        "-map",
-        "[v]",
-        "-map",
-        "[a]",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-profile:v",
-        "high",
-        "-level",
-        "4.1",
-        "-crf",
-        str(crf),
-        "-preset",
-        "medium",
-        "-c:a",
-        "aac",
-        "-b:a",
-        audio_bitrate,
-        "-movflags",
-        "+faststart",
+        "ffmpeg","-y",
+        "-i", str(mp4_path),
+        "-loop","1","-t", f"{duration}","-i", str(png_path),
+        "-filter_complex", filter_graph,
+        "-map","[v]","-map","[a]",
+        "-c:v","libx264","-pix_fmt","yuv420p","-profile:v","high","-level","4.1",
+        "-crf", str(crf), "-preset","medium",
+        "-c:a","aac","-b:a", audio_bitrate,
+        "-movflags","+faststart",
         str(out_path),
     ]
     run_capture(cmd)

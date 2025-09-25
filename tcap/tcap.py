@@ -14,6 +14,42 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+def ensure_tools() -> None:
+    """Ensure ffmpeg and ffprobe are available on PATH."""
+    missing = [tool for tool in ("ffmpeg", "ffprobe") if shutil.which(tool) is None]
+    if missing:
+        raise RuntimeError(f"Missing required tools: {', '.join(missing)}")
+
+def _h264_level_to_str(level_val) -> str | None:
+    """
+    Convert ffprobe's numeric level (e.g. 41) or string ('4.1') to ffmpeg-expected string ('4.1').
+    Returns None if cannot interpret.
+    """
+    if level_val is None:
+        return None
+    s = str(level_val).strip()
+    # Already like '4.1'
+    try:
+        float(s)
+        if "." in s:
+            return s
+    except Exception:
+        pass
+    # Numeric like '41' -> '4.1', '40' -> '4.0'
+    if s.isdigit():
+        if len(s) == 2:
+            return f"{s[0]}.{s[1]}"
+        elif len(s) == 1:
+            return f"{s}.0"
+    return None
+
+_PROFILE_MAP = {
+    "high": "high",
+    "main": "main",
+    "baseline": "baseline",
+    "constrained baseline": "constrained_baseline",
+}
+
 VERSION = os.environ.get("TCAP_CLI_VERSION", "unknown")
 
 
@@ -212,6 +248,7 @@ def append_thumbnail(
     duration: float = 0.3,
     crf: int = 18,
     audio_bitrate: str = "192k",
+    allow_copy_concat: bool = True,
 ) -> None:
     if not mp4_path.exists():
         raise FileNotFoundError(f"Input video not found: {mp4_path}")
@@ -237,9 +274,9 @@ def append_thumbnail(
 
     vcodec = vstream.get("codec_name")
     v_pix_fmt = vstream.get("pix_fmt", "yuv420p")
-    v_profile = vstream.get("profile")
-    # ffprobe gives numeric level; ffmpeg expects like "4.1" – pass as-is if present
-    v_level = str(vstream.get("level")) if vstream.get("level") is not None else None
+    _vp_raw = (vstream.get("profile") or "").strip().lower()
+    v_profile = _PROFILE_MAP.get(_vp_raw) if _vp_raw else None
+    v_level = _h264_level_to_str(vstream.get("level"))
     colors = {
         "space": vstream.get("color_space"),
         "trc": vstream.get("color_transfer"),
@@ -251,7 +288,11 @@ def append_thumbnail(
     a_cl = astream.get("channel_layout")
 
     # We can try concat-copy if video is H.264 and (no audio or AAC audio)
-    can_concat_copy = (vcodec == "h264") and (not info.has_audio or acodec == "aac")
+    can_concat_copy = (
+        allow_copy_concat
+        and (vcodec == "h264")
+        and (not info.has_audio or acodec == "aac")
+    )
 
     if can_concat_copy:
         with tempfile.TemporaryDirectory() as td:
@@ -379,6 +420,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="the processed video overwrites the original (atomic replace in the same folder). Without it, a new <name>_thumb.mp4 is created in the current directory. (default: false)",
     )
+    parser.add_argument(
+        "--no-copy-concat",
+        action="store_true",
+        help="Force full re-encode fallback (disable concat demuxer fast-path).",
+    )
     args = parser.parse_args()
     if args.info:
         return args
@@ -395,6 +441,8 @@ def main() -> None:
         show_info()
         return
 
+    ensure_tools()
+
     if args.pair:
         mp4 = args.pair
         png = args.pair.with_suffix(".png")
@@ -404,7 +452,7 @@ def main() -> None:
         mp4 = args.video
         png = args.thumb
 
-    output = args.out or mp4.with_name(mp4.stem + "_thumb.mp4")
+    output = args.out or (Path.cwd() / f"{mp4.stem}_thumb{mp4.suffix}")
 
     if args.inplace:
         # Write a temporary file in the SAME directory as the input MP4
@@ -425,6 +473,7 @@ def main() -> None:
                 duration=args.duration,
                 crf=args.crf,
                 audio_bitrate=args.audio_bitrate,
+                allow_copy_concat=not args.no_copy_concat,
             )
             # Atomically replace the original file
             tmp_path.replace(mp4)
@@ -444,6 +493,7 @@ def main() -> None:
             duration=args.duration,
             crf=args.crf,
             audio_bitrate=args.audio_bitrate,
+            allow_copy_concat=not args.no_copy_concat,
         )
         print(f"[tcap] Done: {output}")
 

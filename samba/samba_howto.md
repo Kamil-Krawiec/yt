@@ -11,7 +11,7 @@ Not using tailscale? No problem, see below **Optional: Not using Tailscale?**
 
 ## A) Fresh start (clean machine) - much easier and preffered
 
-### REQUIRED: set your Linux user and share path, easier to reference furhter in the config.
+### Nice to have: set your Linux user and share path, easier to reference furhter in the commands (NOT WHEN YOU EDIT FILE WITH NANO STEP3!). You can just write username and share path instead
 ```bash
  USERNAME=${SUDO_USER:-$USER}
  SHARE=/srv/tailshare
@@ -48,8 +48,8 @@ optional configuration for tailscale only:
    browseable = yes
    read only = no
    writable = yes
-   force user = $USERNAME
-   valid users = $USERNAME
+   force user = EDIT_USERNAME
+   valid users = EDIT_USERNAME
    create mask = 0644
    directory mask = 0755
    interfaces = lo tailscale0
@@ -71,7 +71,7 @@ That makes smbd bind only to lo and tailscale0, so it won’t even listen on you
 
 ## B) After purge / configs missing
 
-### REQUIRED: set your Linux user and share path, easier to reference furhter in the config.
+### Nice to have: set your Linux user and share path, easier to reference furhter in the commands (NOT WHEN YOU EDIT FILE WITH NANO STEP3!). You can just write username and share path instead
 ```bash
  USERNAME=${SUDO_USER:-$USER}
  SHARE=/srv/tailshare
@@ -107,8 +107,8 @@ optional configuration for tailscale only:
    browseable = yes
    read only = no
    writable = yes
-   force user = $USERNAME
-   valid users = $USERNAME
+   force user = EDIT_USERNAME
+   valid users = EDIT_USERNAME
    create mask = 0644
    directory mask = 0755
    interfaces = lo tailscale0

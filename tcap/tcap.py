@@ -63,6 +63,11 @@ def _fraction_to_float(value: str | None) -> float | None:
     except ValueError:
         return None
 
+
+def _is_reasonable_fps(value: float | None) -> bool:
+    """Heuristic guardrail for fps values that are usable for concat copy."""
+    return value is not None and 1.0 <= value <= 360.0
+
 _PROFILE_MAP = {
     "high": "high",
     "main": "main",
@@ -119,7 +124,7 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
             "-select_streams",
             "v:0",
             "-show_entries",
-            "stream=width,height,avg_frame_rate,r_frame_rate,nb_frames",
+            "stream=width,height,duration,avg_frame_rate,r_frame_rate,nb_frames",
             "-of",
             "json",
             str(video_path),
@@ -132,45 +137,63 @@ def ffprobe_props(video_path: Path) -> VideoInfo:
 
     width = int(stream["width"])
     height = int(stream["height"])
-    try:
-        duration = float(
-            run_text(
-                [
-                    "ffprobe",
-                    "-v",
-                    "error",
-                    "-show_entries",
-                    "format=duration",
-                    "-of",
-                    "default=nw=1:nk=1",
-                    str(video_path),
-                ]
+    duration = None
+    duration_field = stream.get("duration")
+    if duration_field and duration_field not in {"N/A", "nan"}:
+        try:
+            duration = float(duration_field)
+        except ValueError:
+            duration = None
+
+    if duration is None or duration <= 0:
+        try:
+            duration = float(
+                run_text(
+                    [
+                        "ffprobe",
+                        "-v",
+                        "error",
+                        "-show_entries",
+                        "format=duration",
+                        "-of",
+                        "default=nw=1:nk=1",
+                        str(video_path),
+                    ]
+                )
             )
-        )
-    except Exception:
-        duration = 0.0
+        except Exception:
+            duration = 0.0
 
-    fps: float | None = None
+    fps_candidates: list[float | None] = []
+    for key in ("avg_frame_rate", "r_frame_rate"):
+        fps_candidates.append(_fraction_to_float(stream.get(key)))
 
+    nb_frames = None
     nb_frames_raw = stream.get("nb_frames")
-    if duration > 0 and nb_frames_raw and nb_frames_raw not in {"N/A", "nan"}:
+    if nb_frames_raw and nb_frames_raw not in {"N/A", "nan"}:
         try:
             nb_frames = float(nb_frames_raw)
         except ValueError:
             nb_frames = None
-        else:
-            if nb_frames and nb_frames > 0:
-                fps = nb_frames / duration
 
-    if fps is None or fps <= 0:
-        for key in ("r_frame_rate", "avg_frame_rate"):
-            candidate = _fraction_to_float(stream.get(key))
-            if candidate and candidate > 0:
-                fps = candidate
+    if nb_frames and nb_frames > 0 and duration and duration > 0:
+        fps_candidates.append(nb_frames / duration)
+
+    fps = 30.0
+    valid_candidates = [val for val in fps_candidates if val and val > 0]
+
+    for candidate in valid_candidates:
+        if _is_reasonable_fps(candidate):
+            fps = candidate
+            break
+    else:
+        for candidate in valid_candidates:
+            if candidate >= 1.0:
+                fps = min(candidate, 360.0)
                 break
-
-    if fps is None or fps <= 0:
-        fps = 30.0
+        else:
+            if valid_candidates:
+                fps = 30.0
 
     if duration and duration < 1.0 and fps < 1.0:
         fps = 30.0

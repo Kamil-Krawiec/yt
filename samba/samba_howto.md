@@ -11,8 +11,6 @@ Not using tailscale? No problem, see below **Optional: Not using Tailscale?**
 
 ## A) After purge / configs missing
 ```bash
-> set -e
-
 # REQUIRED: set your Linux user and share path
 > USERNAME=${SUDO_USER:-$USER}
 > SHARE=/srv/tailshare
@@ -62,8 +60,6 @@ EOF
 ## B) Fresh start (clean machine) - much easier and preffered
 
 ```bash
-set -e
-
 > USERNAME=${SUDO_USER:-$USER}
 > SHARE=/srv/tailshare
 

@@ -31,3 +31,12 @@ python new_fancy_script.py --bundle sd15-lcm upscalers
 
 ## Outputs
 - `comfy-data/models/manifest.json` – JSON manifest storing the download timestamp and file paths.
+
+
+
+# Examples of outputs
+
+in output directory you can see example outputs of different WebUI workflows.
+From `workflow_owui_lcm_x2.json` is `*__owui_lcm_x2.png` series.
+From `workflow_owui.json` is `*__owui.png` series.
+From `workflow_owui_lcm_512.json` is `*_owui_lcm_512.png` series.

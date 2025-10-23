@@ -1,2 +1,3 @@
 venv/
-/comfy-data/
+/comfy-data/input/
+/comfy-data/models/

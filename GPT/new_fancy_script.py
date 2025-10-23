@@ -70,8 +70,8 @@ def download_file(repo, filename, target_dir, rename=None):
     return str(destination)
 
 
-def write_manifest(installed, add_cpu_notes):
-    manifest = {"updated": datetime.utcnow().isoformat() + "Z", "installed": installed}
+def write_manifest(installed):
+    manifest = {"updated": datetime.now().isoformat() + "Z", "installed": installed}
     MANIFEST.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     lines = ["# MODELS USED", f"- Updated: {manifest['updated']}"]
@@ -114,7 +114,7 @@ def main():
             location = download_file(repo, filename, target_dir, rename)
             installed.setdefault(category, []).append(location)
 
-    write_manifest(installed, False)
+    write_manifest(installed)
     print("Done.")
 
 

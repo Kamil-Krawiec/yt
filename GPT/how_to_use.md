@@ -7,10 +7,14 @@
 pip install -U huggingface_hub
 ```
 
-## Basic Command
+## Basic Commands
 From the project root run I ran this command in video:
 ```bash
 python new_fancy_script.py --bundle sd15-lcm --vae
+```
+Another model that was tested by me is dreamshaper7, im really impressed by this model, highly recommend!!!
+```bash
+ python new_fancy_script.py --bundle dreamshaper7 --vae
 ```
 
 ## Bundle Options

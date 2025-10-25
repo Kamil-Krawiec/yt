@@ -39,6 +39,11 @@ BUNDLES = {
     "sdxl-turbo": [
         ("checkpoints", "stabilityai/sdxl-turbo", "sdxl-turbo.safetensors", DIRS["checkpoints"], None),
     ],
+    "dreamshaper7": [
+        ("checkpoints", "Lykon/DreamShaper",
+         "DreamShaper_7_pruned.safetensors",
+         DIRS["checkpoints"], None),
+    ],
 }
 
 OPTIONAL_FILES = {

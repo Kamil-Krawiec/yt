@@ -8,9 +8,9 @@ pip install -U huggingface_hub
 ```
 
 ## Basic Command
-From the project root run:
+From the project root run I ran this command in video:
 ```bash
-python new_fancy_script.py --bundle sd15-lcm --vae 
+python new_fancy_script.py --bundle sd15-lcm --vae
 ```
 
 ## Bundle Options
@@ -37,6 +37,6 @@ python new_fancy_script.py --bundle sd15-lcm upscalers
 # Examples of outputs
 
 in output directory you can see example outputs of different WebUI workflows.
-From `workflow_owui_lcm_x2.json` is `*__owui_lcm_x2.png` series.
-From `workflow_owui.json` is `*__owui.png` series.
-From `workflow_owui_lcm_512.json` is `*_owui_lcm_512.png` series.
+- From `workflow_owui_lcm_x2.json` is `*__owui_lcm_x2.png` series.
+- From `workflow_owui.json` is `*__owui.png` series.
+- From `workflow_owui_lcm_512.json` is `*_owui_lcm_512.png` series.

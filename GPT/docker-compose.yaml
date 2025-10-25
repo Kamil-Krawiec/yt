@@ -33,7 +33,9 @@ services:
       - "127.0.0.1:8188:8188"      # host 8188 -> container 8188 (ComfyUI)
     environment:
       - CF_QUICK_TUNNELS=false
-    command: ["/opt/environments/python/comfyui/bin/python","-u","/opt/ComfyUI/main.py","--listen","0.0.0.0","--port","8188","--cpu"]
+      - COMFYUI_ARGS=--listen 0.0.0.0 --port 8188
+      # there is possibility to make it as webui and enable login, in my case its not an option
+      - WEB_ENABLE_AUTH=false
     volumes:
       - ./comfy-data/models:/opt/ComfyUI/models
       - ./comfy-data/input:/opt/ComfyUI/input

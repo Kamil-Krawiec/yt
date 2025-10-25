@@ -16,6 +16,10 @@ Another model that was tested by me is dreamshaper7, im really impressed by this
 ```bash
  python new_fancy_script.py --bundle dreamshaper7 --vae
 ```
+Another [photorealistic model](https://huggingface.co/dreamlike-art/dreamlike-photoreal-2.0) from HF NOT shown in a video but I tested it and its nice!
+```bash
+python new_fancy_script.py --bundle photoreal-dreamlike20 --vae
+```
 
 ## Bundle Options
 `--bundle` accepts one or more of:

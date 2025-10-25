@@ -44,6 +44,15 @@ BUNDLES = {
          "DreamShaper_7_pruned.safetensors",
          DIRS["checkpoints"], None),
     ],
+    "photoreal-dreamlike20": [
+        (
+            "checkpoints",
+            "dreamlike-art/dreamlike-photoreal-2.0",
+            "dreamlike-photoreal-2.0.safetensors",
+            DIRS["checkpoints"],
+            None,
+        ),
+    ],
 }
 
 OPTIONAL_FILES = {

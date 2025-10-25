@@ -44,3 +44,4 @@ in output directory you can see example outputs of different WebUI workflows.
 - From `workflow_owui_lcm_x2.json` is `*__owui_lcm_x2.png` series.
 - From `workflow_owui.json` is `*__owui.png` series.
 - From `workflow_owui_lcm_512.json` is `*_owui_lcm_512.png` series.
+- From `workflow_deamshaper7_*.json` is `*DreamShaper_*.png` series and I think its the best!

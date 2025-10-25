@@ -1,15 +1,39 @@
 {
-  "1": {
+  "4": {
     "class_type": "CheckpointLoaderSimple",
-    "inputs": {
-      "ckpt_name": "DreamShaper_7_pruned.safetensors"
-    }
+    "inputs": { "ckpt_name": "DreamShaper_7_pruned.safetensors" }
   },
   "2": {
     "class_type": "VAELoader",
+    "inputs": { "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors" }
+  },
+  "7": {
+    "class_type": "LoraLoader",
     "inputs": {
-      "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors"
+      "model": ["4", 0],
+      "clip": ["4", 1],
+      "lora_name": "lcm-lora-sdv1-5.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1
     }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["7", 1],
+      "text": "a detailed portrait, photorealistic, soft lighting, high detail, masterpiece"
+    }
+  },
+  "12": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["7", 1],
+      "text": "(worst quality, low quality, jpeg artifacts, lowres, deformed, extra fingers, mutated hands:1.4)"
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": { "width": 512, "height": 512, "batch_size": 1 }
   },
   "3": {
     "class_type": "KSampler",
@@ -20,89 +44,18 @@
       "sampler_name": "dpmpp_2m",
       "scheduler": "sgm_uniform",
       "denoise": 1,
-      "model": [
-        "7",
-        0
-      ],
-      "positive": [
-        "4",
-        0
-      ],
-      "negative": [
-        "5",
-        0
-      ],
-      "latent_image": [
-        "6",
-        0
-      ]
-    }
-  },
-  "4": {
-    "class_type": "CLIPTextEncode",
-    "inputs": {
-      "clip": [
-        "7",
-        1
-      ],
-      "text": "a detailed portrait, photorealistic, soft lighting, high detail, masterpiece"
-    }
-  },
-  "5": {
-    "class_type": "CLIPTextEncode",
-    "inputs": {
-      "clip": [
-        "7",
-        1
-      ],
-      "text": "(worst quality, low quality, jpeg artifacts, lowres, deformed, extra fingers, mutated hands:1.4)"
-    }
-  },
-  "6": {
-    "class_type": "EmptyLatentImage",
-    "inputs": {
-      "width": 512,
-      "height": 512,
-      "batch_size": 1
-    }
-  },
-  "7": {
-    "class_type": "LoraLoader",
-    "inputs": {
-      "model": [
-        "1",
-        0
-      ],
-      "clip": [
-        "1",
-        1
-      ],
-      "lora_name": "lcm-lora-sdv1-5.safetensors",
-      "strength_model": 1,
-      "strength_clip": 1
+      "model": ["7", 0],
+      "positive": ["6", 0],
+      "negative": ["12", 0],
+      "latent_image": ["5", 0]
     }
   },
   "8": {
     "class_type": "VAEDecode",
-    "inputs": {
-      "samples": [
-        "3",
-        0
-      ],
-      "vae": [
-        "2",
-        0
-      ]
-    }
+    "inputs": { "samples": ["3", 0], "vae": ["2", 0] }
   },
   "9": {
     "class_type": "SaveImage",
-    "inputs": {
-      "images": [
-        "8",
-        0
-      ],
-      "filename_prefix": "LCM_DreamShaper_7_"
-    }
+    "inputs": { "images": ["8", 0], "filename_prefix": "LCM_DreamShaper_7" }
   }
 }

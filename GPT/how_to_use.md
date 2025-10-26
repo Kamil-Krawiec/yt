@@ -24,6 +24,8 @@ python new_fancy_script.py --bundle photoreal-dreamlike20 --vae
 ## Bundle Options
 `--bundle` accepts one or more of:
 - `sd15-lcm`
+- `dreamshaper7`
+- `photoreal-dreamlike20`
 - `upscalers`
 - `controlnet-canny`
 - `flux-schnell`
@@ -39,6 +41,7 @@ python new_fancy_script.py --bundle sd15-lcm upscalers
 
 ## Outputs
 - `comfy-data/models/manifest.json` – JSON manifest storing the download timestamp and file paths.
+- `comfy-data/models/MODELS_USED.md` – Markdown snapshot summarizing which files were fetched.
 
 
 
@@ -48,4 +51,4 @@ in output directory you can see example outputs of different WebUI workflows.
 - From `workflow_owui_lcm_x2.json` is `*__owui_lcm_x2.png` series.
 - From `workflow_owui.json` is `*__owui.png` series.
 - From `workflow_owui_lcm_512.json` is `*_owui_lcm_512.png` series.
-- From `workflow_deamshaper7_*.json` is `*DreamShaper_*.png` series and I think its the best!
+- From `workflow_dreamshaper7_*.json` is `*DreamShaper_*.png` series and I think its the best!

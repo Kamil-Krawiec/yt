@@ -1,6 +1,9 @@
+## My copy paste commands :p
+```bash
 docker cp Modelfile ollama:/root/Modelfile
 docker exec -it ollama ollama rm kodzero-shorts || true 
 docker exec -it ollama ollama create kodzero-shorts -f /root/Modelfile
+```
 # yt-shorts-automation — Ollama assistant
 
 This short guide shows how to (re)deploy an Ollama model instance inside a running Docker container named `ollama`.

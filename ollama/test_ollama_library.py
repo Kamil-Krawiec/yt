@@ -7,7 +7,7 @@ import ollama
 
 print("--- Method 2: Direct ollama library call (ollama>=0.6.1) ---")
 
-model_name = "kodzero-shorts"
+model_name = "kodzero-shorts-json:latest"
 prompt_text = \
 """
 zobaczyć wyniki czasowe pomiędzy tymi workflow'ami, jak i wyniki promptowe.

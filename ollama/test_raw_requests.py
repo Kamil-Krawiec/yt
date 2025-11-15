@@ -12,7 +12,7 @@ url = "http://localhost:11434/api/generate"
 
 # This is the payload we send to the server
 payload = {
-    "model": "kodzero-shorts",  # Your assistant from the Modelfile or any other model you have installed (can be checked with `ollama list`)
+    "model": "kodzero-shorts-json:latest",  # Your assistant from the Modelfile or any other model you have installed (can be checked with `ollama list`)
     "prompt": 
     """
     zobaczyć wyniki czasowe pomiędzy tymi workflow'ami, jak i wyniki promptowe.

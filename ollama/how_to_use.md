@@ -16,8 +16,3 @@ Both scripts were tested with Python 3.10+, but any modern Python 3 version shou
 - `python test_ollama_library.py` — same prompt sent through the official `ollama` Python client.
 
 Each script prints the JSON string returned by your model and then tries to read the `title` field. Edit the `prompt_text` or `prompt` variable to send whatever text you want.
-
-## 4. Troubleshooting tips
-- **Connection error**: Ensure `ollama serve` is still running. The server must be on `localhost:11434` unless you change the URL in `test_raw_requests.py`.
-- **Model not found**: Pull or create the model name you set in `model_name`/`model` (for example, `ollama pull llama3` or use your custom Modelfile and `ollama create`).
-- **Invalid JSON**: Adjust your prompt or model so it returns valid JSON. Until then, wrap the parsing logic in a `try/except` block (already done in both scripts).

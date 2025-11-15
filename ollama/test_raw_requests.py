@@ -25,7 +25,8 @@ payload = {
     I faktycznie wygląda to realistycznie.
     Ja byłem zaskoczony.
     """,
-    "stream": False  # Ask for the whole answer in one go
+    "stream": False,  # Ask for the whole answer in one go
+    "format": "json"  # Important: ask the model to return JSON-formatted output
 }
 
 response_string = None

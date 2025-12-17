@@ -4,10 +4,12 @@ services:
     container_name: ollama
     restart: unless-stopped
     ports:
-      - "127.0.0.1:11434:11434"   
+      - "127.0.0.1:11434:11434"
+    networks:
+      - llm_net
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434 
-      - OLLAMA_KEEP_ALIVE=2m      
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=2m
     volumes:
       - ollama:/root/.ollama
 
@@ -17,7 +19,9 @@ services:
     restart: unless-stopped
     depends_on: [ollama]
     ports:
-      - "127.0.0.1:3000:8080"     
+      - "127.0.0.1:3000:8080"
+    networks:
+      - llm_net
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OFFLINE_MODE=true
@@ -30,18 +34,34 @@ services:
     container_name: comfyui
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8188:8188"      # host 8188 -> container 8188 (ComfyUI)
+      - "127.0.0.1:8188:8188"
+    networks:
+      - llm_net
     environment:
       - CF_QUICK_TUNNELS=false
       - COMFYUI_ARGS=--listen 0.0.0.0 --port 8188
-      # there is possibility to make it as webui and enable login, in my case its not an option
       - WEB_ENABLE_AUTH=false
     volumes:
       - ./comfy-data/models:/opt/ComfyUI/models
       - ./comfy-data/input:/opt/ComfyUI/input
       - ./comfy-data/output:/opt/ComfyUI/output
 
+  piper-tts:
+    image: kamilkrawiec/piper-openai-tts:latest
+    container_name: piper-tts-openwebui
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    networks:
+      - llm_net
+    volumes:
+      - ./piper-data:/data 
+
 volumes:
   ollama:
   open-webui:
   comfyui:
+
+networks:
+  llm_net:
+    external: true

@@ -3,6 +3,8 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "127.0.0.1:11434:11434"
     networks:
@@ -51,7 +53,7 @@ services:
     container_name: piper-tts
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     networks:
       - llm_net
     volumes:

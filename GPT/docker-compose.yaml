@@ -48,7 +48,7 @@ services:
 
   piper-tts:
     image: kamilkrawiec/piper-openai-tts:latest
-    container_name: piper-tts-openwebui
+    container_name: piper-tts
     restart: unless-stopped
     ports:
       - "5000:5000"

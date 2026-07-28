@@ -1,0 +1,17 @@
+# Recommended AdGuard Home DNS blocklists.
+# Add these in: Filters -> DNS blocklists -> Add blocklist -> Add a custom list.
+
+# Good default AdGuard list.
+https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+
+# Strong, well-maintained all-purpose DNS blocking.
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt
+
+# Broad ad/tracker/malware blocking with low breakage.
+https://big.oisd.nl/
+
+# Classic hosts-based adware/malware list.
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+
+# Optional, more aggressive. Add only if you accept more possible breakage.
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/ultimate.txt

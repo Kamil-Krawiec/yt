@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+require_cmd docker
+require_cmd tailscale
+
+TAILSCALE_IP="${TAILSCALE_IP:-$(tailscale ip -4 2>/dev/null | head -n 1 || true)}"
+if [[ -z "$TAILSCALE_IP" ]]; then
+  echo "Could not detect a Tailscale IPv4 address. Is Tailscale running and logged in?" >&2
+  exit 1
+fi
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  cat >"$ENV_FILE" <<EOF_ENV
+TZ=Etc/UTC
+ADGUARD_BIND_IP=$TAILSCALE_IP
+ADGUARD_WEB_BIND_IP=$TAILSCALE_IP
+EOF_ENV
+  echo "Created $ENV_FILE using Tailscale IP $TAILSCALE_IP"
+fi
+
+mkdir -p "$SCRIPT_DIR/work" "$SCRIPT_DIR/conf"
+
+sudo install -m 0644 /dev/stdin /etc/sysctl.d/99-tailscale-exit-node.conf <<'EOF_SYSCTL'
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+EOF_SYSCTL
+sudo sysctl -p /etc/sysctl.d/99-tailscale-exit-node.conf >/dev/null
+
+if command -v ufw >/dev/null 2>&1; then
+  WAN_IF="$(ip -o -4 route show to default 2>/dev/null | awk '{print $5; exit}')"
+  sudo ufw allow in on tailscale0 to any port 53 proto tcp >/dev/null
+  sudo ufw allow in on tailscale0 to any port 53 proto udp >/dev/null
+  sudo ufw allow in on tailscale0 to any port 3000 proto tcp >/dev/null
+  sudo ufw allow in on tailscale0 to any port 3001 proto tcp >/dev/null
+  if [[ -n "${WAN_IF:-}" && "$WAN_IF" != "tailscale0" ]]; then
+    sudo ufw deny in on "$WAN_IF" to any port 53 >/dev/null
+    sudo ufw deny in on "$WAN_IF" to any port 3000 proto tcp >/dev/null
+    sudo ufw deny in on "$WAN_IF" to any port 3001 proto tcp >/dev/null
+  fi
+fi
+
+cd "$SCRIPT_DIR"
+docker compose up -d
+sudo tailscale set --advertise-exit-node=true
+
+cat <<EOF_DONE
+AdGuard is running on the Tailscale IP:
+  DNS:   $TAILSCALE_IP:53
+  Panel: http://$TAILSCALE_IP:3000
+  First-run installer fallback: http://$TAILSCALE_IP:3001
+
+Next manual steps:
+  1. Open the AdGuard panel and finish first-time setup.
+  2. In Tailscale admin console, approve this machine as an exit node.
+  3. In Tailscale DNS settings, add $TAILSCALE_IP as a global nameserver and enable Override DNS servers.
+  4. On each client device, choose this server as the exit node when you want ad-filtered routing.
+EOF_DONE

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_LINE="source /home/kamil/yt/adguard/aliases.sh"
+BASHRC="$HOME/.bashrc"
+
+touch "$BASHRC"
+
+if grep -Fxq "$SOURCE_LINE" "$BASHRC"; then
+  echo "Aliases are already installed in $BASHRC"
+else
+  printf '\n# AdGuard + Tailscale helpers\n%s\n' "$SOURCE_LINE" >>"$BASHRC"
+  echo "Installed aliases in $BASHRC"
+fi
+
+echo "Run this to use them in the current shell:"
+echo "  source $BASHRC"

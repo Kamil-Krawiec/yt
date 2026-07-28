@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if command -v tailscale >/dev/null 2>&1; then
+  sudo tailscale set --advertise-exit-node=false
+else
+  echo "tailscale command not found; skipping exit-node disable." >&2
+fi
+
+cd "$SCRIPT_DIR"
+if command -v docker >/dev/null 2>&1; then
+  docker compose stop adguard
+else
+  echo "docker command not found; skipping AdGuard stop." >&2
+fi
+
+cat <<'EOF_DONE'
+Exit-node advertising is off and AdGuard has been stopped.
+
+Important: if Tailscale DNS still points to this server, connected devices may lose DNS until AdGuard is started again or DNS is changed in the Tailscale admin console.
+EOF_DONE

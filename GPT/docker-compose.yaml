@@ -58,11 +58,49 @@ services:
       - llm_net
     volumes:
       - ./piper-data:/data 
+  
+  # Info: I needed to add additional preveleges to the voicebox container to get it to work properly. I had to execute the following commands to fix permissions on the voicebox container after it was created. 
+  # You may need to do this as well if you run into issues.
+  # Files from generations directory:
+  # docker compose exec --user root voicebox sh -lc \
+  # 'chown -R voicebox:voicebox /app/data/generations && chmod u+rwx /app/data/generations'
+  # Models directory:
+  # docker compose exec --user root voicebox sh -lc \
+  # 'chown -R voicebox:voicebox /home/voicebox/.cache/huggingface'
+  voicebox:
+    build:
+      context: ../voicebox
+    container_name: voicebox
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:17600:17493"
+
+    networks:
+      - llm_net
+
+    environment:
+      - LOG_LEVEL=info
+      - NUMBA_CACHE_DIR=/tmp/numba_cache
+      - VOICEBOX_FORCE_CPU=1
+
+    volumes:
+      - ./voicebox-output:/app/data/generations
+      - voicebox-data:/app/data
+      - voicebox-hf-cache:/home/voicebox/.cache/huggingface
+
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 10G
 
 volumes:
   ollama:
   open-webui:
   comfyui:
+  voicebox-data:
+  voicebox-hf-cache:
 
 networks:
   llm_net:

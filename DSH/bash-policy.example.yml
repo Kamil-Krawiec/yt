@@ -1,0 +1,133 @@
+# DSH bash command review policy.
+#
+# Matching is deterministic and literal: a rule matches when any string in its
+# patterns appears in the command. Rules are evaluated in this order:
+# deny, allow, ask, then default ask when nothing matches.
+#
+# Keep deny patterns narrow and explicit. Add an ask rule instead of a deny rule
+# when you want to decide case by case.
+
+rules:
+  # Absolute safety overrides: these are never approved by the plugin.
+  - id: recursive-root-delete
+    tier: deny
+    reason: "recursively deletes from the filesystem root"
+    patterns:
+      - "rm -rf /"
+      - "rm -fr /"
+      - "rm -rf /*"
+      - "rm -fr /*"
+
+  - id: destructive-device-operation
+    tier: deny
+    reason: "formats or overwrites a block device"
+    patterns:
+      - "mkfs"
+      - "dd of=/dev/"
+      - "dd if=/dev/zero of=/dev/"
+
+  - id: shell-persistence
+    tier: deny
+    reason: "modifies SSH authorization or scheduled shell persistence"
+    patterns:
+      - "authorized_keys"
+      - ".bashrc"
+      - ".zshrc"
+      - ".profile"
+      - "crontab"
+
+  # Read-only commands that are safe to run without an extra prompt.
+  - id: read-only-inspection
+    tier: allow
+    reason: "reads or lists local state"
+    patterns:
+      - "pwd"
+      - "ls"
+      - "dir"
+      - "cat "
+      - "head "
+      - "tail "
+      - "less "
+      - "more "
+      - "wc "
+      - "stat "
+      - "file "
+      - "tree"
+      - "find "
+      - "grep "
+      - "rg "
+      - "awk "
+      - "sed -n"
+      - "sort "
+      - "uniq "
+
+  - id: git-read-only
+    tier: allow
+    reason: "shows repository state without changing it"
+    patterns:
+      - "git status"
+      - "git log"
+      - "git diff"
+      - "git show"
+      - "git branch"
+      - "git remote -v"
+      - "git rev-parse"
+
+  # Operations that may be reasonable but require explicit approval.
+  - id: file-mutation
+    tier: ask
+    reason: "writes, edits, moves, copies, or deletes files"
+    patterns:
+      - "rm "
+      - "mv "
+      - "cp "
+      - "mkdir "
+      - "touch "
+      - "chmod "
+      - "chown "
+      - "tee "
+      - "truncate "
+      - "sed -i"
+      - " >"
+      - " >>"
+
+  - id: package-change
+    tier: ask
+    reason: "installs, upgrades, or removes packages"
+    patterns:
+      - "apt "
+      - "apt-get "
+      - "yum "
+      - "dnf "
+      - "brew "
+      - "npm install"
+      - "npm uninstall"
+      - "pnpm add"
+      - "pnpm install"
+      - "pip install"
+      - "cargo install"
+
+  - id: network-access
+    tier: ask
+    reason: "connects to a remote host or sends data over the network"
+    patterns:
+      - "curl "
+      - "wget "
+      - "ssh "
+      - "scp "
+      - "rsync "
+      - "nc "
+      - "telnet "
+      - "git clone"
+      - "git fetch"
+      - "git pull"
+
+  - id: elevated-privilege
+    tier: ask
+    reason: "runs with elevated privileges"
+    patterns:
+      - "sudo "
+      - "doas "
+      - "su -"
+
+  # Commands with no matching rule also fall through to ask.

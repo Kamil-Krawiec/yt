@@ -22,11 +22,11 @@ Clone the repository, or clone only this branch:
 ```bash
 mkdir -p ~/.local/share/dsh/plugins
 git clone --branch dsh-plugin --single-branch \
-  https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git \
+  https://github.com/Kamil-Krawiec/yt.git \
   ~/.local/share/dsh/plugins/dsh-tool-bash-policy
 ```
 
-Replace `YOUR_USERNAME/YOUR_REPOSITORY` with the repository URL.
+The plugin is stored in the `DSH/` directory of the `dsh-plugin` branch.
 
 ## Add it to a DSH profile
 

@@ -1,5 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis';
-import type { PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools';
+import type { PreToolDecision } from '@deepseek-ai/dsh-tools';
 
 export interface BashPolicyRule {
   readonly id?: string;
@@ -17,5 +17,5 @@ export declare const name: 'tool-bash-policy';
 export declare const inject: readonly ['tools'];
 export declare function loadRules(path: string): readonly BashPolicyRule[];
 export declare function decisionFor(command: string, rules: readonly BashPolicyRule[]): PreToolDecision;
-export declare function apply(ctx: Context, config?: BashPolicyConfig): Promise<void>;
+export declare function apply(ctx: Context, config?: BashPolicyConfig): void;
 export { apply as default };

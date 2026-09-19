@@ -12,9 +12,14 @@ services:
 
     volumes:
       - ~/.hermes:/opt/data
+      
+    env_file:
+      - ${HOME}/.hermes/.env
 
     environment:
       - HERMES_DASHBOARD=1
+      - HERMES_UID=${HERMES_UID}
+      - HERMES_GID=${HERMES_GID}
 
     deploy:
       resources:

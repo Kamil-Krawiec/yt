@@ -1,0 +1,23 @@
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: unless-stopped
+
+    command: gateway run
+
+    ports:
+      - "8642:8642"
+      - "9119:9119"
+
+    volumes:
+      - ~/.hermes:/opt/data
+
+    environment:
+      - HERMES_DASHBOARD=1
+
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"

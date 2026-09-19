@@ -7,8 +7,8 @@ services:
     command: gateway run
 
     ports:
-      - "8642:8642"
-      - "9119:9119"
+      - "127.0.0.1:8642:8642"
+      - "127.0.0.1:9119:9119"
 
     volumes:
       - ~/.hermes:/opt/data

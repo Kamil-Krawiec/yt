@@ -23,7 +23,7 @@ API_SERVER_HOST=0.0.0.0
 API_SERVER_KEY=INNY_LOSOWY_KLUCZ_API
 ```
 
-Oba sekrety wygeneruj osobno:
+Zmień wszystkie przykładowe wartości. Hasło oraz oba sekrety wygeneruj osobno:
 
 ```bash
 openssl rand -hex 32
@@ -42,6 +42,8 @@ export HERMES_GID="$(id -g)"
 docker compose config --quiet
 docker compose up -d
 ```
+
+Compose przekazuje ten plik do kontenera; API jest jawnie włączone w `docker-compose.yaml`.
 
 ## 3. Sprawdź
 

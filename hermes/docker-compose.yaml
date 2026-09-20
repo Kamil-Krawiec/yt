@@ -14,9 +14,20 @@ services:
     volumes:
       - ${HOME}/.hermes:/opt/data
 
+    env_file:
+      - ${HOME}/.hermes/.env
+
     environment:
       HERMES_DASHBOARD: "1"
       HERMES_DASHBOARD_HOST: "0.0.0.0"
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+
+      # Bez instalacji runtime i prób pobierania poświadczeń z metadanych AWS.
+      HERMES_DISABLE_LAZY_INSTALLS: "1"
+      HERMES_LAZY_INSTALL_TARGET: ""
+      AWS_EC2_METADATA_DISABLED: "true"
+
       HERMES_UID: ${HERMES_UID:?Ustaw HERMES_UID poleceniem export HERMES_UID="$(id -u)"}
       HERMES_GID: ${HERMES_GID:?Ustaw HERMES_GID poleceniem export HERMES_GID="$(id -g)"}
 

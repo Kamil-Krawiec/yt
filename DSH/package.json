@@ -1,0 +1,29 @@
+{
+  "name": "@deepseek-ai/dsh-tool-bash-policy",
+  "description": "User-defined allow / ask / deny gate for the bash tool. Loads a YAML rule file and runs every bash command through a tools/pre-execute waterfall listener. Tier 1 = strict deny, tier 2 = strict allow, tier 3 = ask (via ctx.approval). Unmatched commands fall through to ask.",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/index.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-agent": "^0.1.1-rc.2",
+    "yaml": "^2.6.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-agent": "^0.1.1-rc.2"
+  }
+}
